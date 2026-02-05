@@ -1,0 +1,69 @@
+@using Model;
+@using System.Text.Json;
+@page "/play"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Play</PageTitle>
+
+<div class="main-container">
+    <h1>Plays Remaining: @(playsRemaining.ToString())</h1>
+    <div class="container">
+        <div class="one"></div>
+        <div class="two"></div>
+        <div class="three"></div>
+        <div class="four"></div>
+        <div class="five"></div>
+        <div class="six"></div>
+        <div class="seven"></div>
+        <div class="eight"></div>
+    </div>
+    <button id="spin" @onclick="spin">Spin</button>
+</div>
+
+@code {
+    private string playerId { get; set; }
+    private int playsRemaining { get; set; }
+
+    string getQueryParam(string param) 
+    {
+        UriBuilder? uri = new UriBuilder(NavigationManager.Uri);
+        System.Collections.Specialized.NameValueCollection? queryParams = 
+            System.Web.HttpUtility.ParseQueryString(uri.Query);
+        return queryParams[param] ?? "";
+    }
+
+    protected override async Task OnInitializedAsync(){
+        playerId = getQueryParam(param: "id");
+
+        HttpResponseMessage response = await Http.GetAsync(requestUri: 
+            $"http://localhost:5282/api/player/{playerId}/status");
+        Player? player = await response.Content.ReadFromJsonAsync<Player>();
+        playsRemaining = player.PlaysRemaining;
+
+        if (player.isSessionExpired()) 
+        {
+            NavigationManager.NavigateTo(uri: "/sessionexpired");
+        } 
+        else if (player.PlaysRemaining <= 0) 
+        {
+            NavigationManager.NavigateTo(uri: "/noplays");
+        }
+    }
+
+    private async Task spin(){
+        Player player = new Player {PlayerId = Int32.Parse(playerId)};
+        HttpResponseMessage? resp = await Http.PostAsJsonAsync(requestUri: 
+            "http://localhost:5282/api/game/play", player);   
+
+        Dictionary<string, string>? respContent = await 
+            resp.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Player receivedPlayer = JsonSerializer.Deserialize<Player>(respContent[key: "player"]);
+        Prize prize = JsonSerializer.Deserialize<Prize>(respContent[key: "prize"]);
+
+        playsRemaining = receivedPlayer.PlaysRemaining;
+        string PrizeDescription = prize.Description;
+
+        NavigationManager.NavigateTo(uri: $"/prize?id={playerId}&description={PrizeDescription}");
+    }
+}

@@ -1,0 +1,28 @@
+@using Model;
+@using System.Text;
+@page "/"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Spin To Win!</PageTitle>
+
+<div class="main-container">
+    <h1>Spin To Win</h1>
+    <h2>Free Daily Spins</h2>
+    <div class="container">
+        <div class="one"></div>
+        <div class="two"></div>
+        <div class="three"></div>
+        <div class="four"></div>
+        <div class="five"></div>
+        <div class="six"></div>
+        <div class="seven"></div>
+        <div class="eight"></div>
+    </div>
+    <span><button @onclick="toLogin" class="btn btn-primary btn-lg">Login</button></span>
+</div>
+
+@code {
+    private void toLogin () {
+        NavigationManager.NavigateTo(uri: "login");
+    }
+}

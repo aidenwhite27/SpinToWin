@@ -1,0 +1,35 @@
+@page "/prize"
+@inject NavigationManager NavigationManager
+
+<PageTitle>Prize</PageTitle>
+
+<div class="main-container">
+    <h1>You Received:</h1>
+    <h2>@(PrizeDescription)</h2>
+
+    <button @onclick="continuePlaying">Continue</button>
+</div>
+
+@code {
+    private string PlayerId { get; set; }
+    private string PrizeDescription { get; set; }
+
+    string getQueryParam(string param) 
+    {
+        UriBuilder? uri = new UriBuilder(NavigationManager.Uri);
+        System.Collections.Specialized.NameValueCollection? queryParams = 
+            System.Web.HttpUtility.ParseQueryString(uri.Query);
+        return queryParams[param] ?? "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PlayerId = getQueryParam(param: "id");
+        PrizeDescription = getQueryParam(param: "description");
+    }
+
+    private void continuePlaying() 
+    {
+        NavigationManager.NavigateTo(uri: $"/play?id={PlayerId}");
+    }
+}

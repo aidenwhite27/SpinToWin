@@ -1,0 +1,87 @@
+@using Model;
+@using System.Text;
+@using System.Text.Json
+@using System.Net
+@page "/login"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<PageTitle>Login</PageTitle>
+
+<div class="main-container">
+    <h1>Enter Player ID:</h1>
+    <div class="alert-danger" role="alert">@(errorMessage)</div>
+    <input type="text" class="h-20" name="playerID" @bind="playerIdInput" />
+
+    <table class="numpad-grid">
+        @for (int row=0; row<numpadKeys.GetLength(dimension: 0); row++) {
+            <tr>
+            @for (int col=0; col<numpadKeys.GetLength(dimension: 1); col++) {
+                string key = @numpadKeys[row,col];
+                <td>
+                    <button class="btn btn-primary btn-lg" style="font-size: 5vh; padding 2vw;" @onclick=@(()=>numpadPressed(key))>@key</button>
+                </td>
+            }
+            </tr>
+        }
+    </table>
+
+    <input type="submit" class="btn btn-primary btn-lg" @onclick="login"/>
+</div>
+
+@code {
+    private string playerIdInput { get; set; }
+    private string errorMessage { get; set; }
+    private string[,] numpadKeys = 
+    {
+        { "1", "2", "3"}, 
+        {"4", "5", "6"}, 
+        {"7", "8", "9"}, 
+        {"X", "0", "<-"}
+    };
+
+    private void numpadPressed(string value) 
+    {
+        if (value == "X")
+        {
+            playerIdInput = "";
+        } 
+        else if (value == "<-")
+        {
+            playerIdInput = playerIdInput.Substring(startIndex: 0, playerIdInput.Length-1);
+        }
+        else
+        {
+            playerIdInput += value;
+        }
+    }
+
+    private async Task login() {
+
+        if (string.IsNullOrEmpty(playerIdInput)){
+            errorMessage = "Please enter a PlayerID";
+            return;
+        }
+
+        Player player = new Player {PlayerId = Int32.Parse(playerIdInput)};
+
+        HttpResponseMessage? response = await Http.PostAsJsonAsync(
+            requestUri: "http://localhost:5282/api/player/login", player);
+        string? respStr = await response.Content.ReadAsStringAsync();
+
+        bool loginSuccessful = false;
+        if (response.StatusCode == HttpStatusCode.OK) 
+        {
+            loginSuccessful = true;
+        }
+        else 
+        {
+            errorMessage = "PlayerID not found. Please try again.";
+        }
+
+        if (loginSuccessful) 
+        {
+            NavigationManager.NavigateTo(uri: $"/play?id={playerIdInput}");
+        }
+    }
+}

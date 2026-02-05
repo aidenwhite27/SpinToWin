@@ -1,0 +1,17 @@
+@page "/noplays"
+@inject NavigationManager NavigationManager
+
+<PageTitle>No Plays Remaining</PageTitle>
+
+<div class="main-container">
+    <h1>No Plays Remaining</h1>
+    <h2>Come Back Tomorrow!</h2>
+
+    <button @onclick="exit">Exit</button>
+</div>
+
+@code {
+    private void exit() {
+        NavigationManager.NavigateTo(uri: "/");
+    }
+}
